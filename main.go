@@ -6,11 +6,20 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+	"strings"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/image/math/fixed"
+)
+
+const (
+	fontSize = 16
+)
+
+var (
+	monoFont font.Face
 )
 
 func ttf(data []byte, size int) font.Face {
@@ -38,57 +47,53 @@ func write(img *image.RGBA, col color.RGBA, x, y int, str string) {
 		Dst:  img,
 		Src:  image.NewUniform(col),
 		Dot:  point,
-		Face: ttf(gomono.TTF, 24),
+		Face: monoFont,
 	}
 
 	d.DrawString(str)
 }
 
-// Gif WIP:
-//
-// 	var images []*image.Paletted
-// 	var delays []int
-//
-// 	var palette = []color.Color{
-// 		color.RGBA{0x00, 0x00, 0x00, 0xFF},
-// 		color.RGBA{0x00, 0x00, 0xFF, 0xFF},
-// 		color.RGBA{0x00, 0xFF, 0x00, 0xFF},
-// 		color.RGBA{0x00, 0xFF, 0xFF, 0xFF},
-// 		color.RGBA{0xFF, 0x00, 0x00, 0xFF},
-// 		color.RGBA{0xFF, 0x00, 0xFF, 0xFF},
-// 		color.RGBA{0xFF, 0xFF, 0x00, 0xFF},
-// 		color.RGBA{0xFF, 0xFF, 0xFF, 0xFF},
-// 	}
-//
-// 	var w, h int = 240, 240
-//
-// 	for i := 0; i < 100; i++ {
-// 		img := image.NewPaletted(image.Rect(0, 0, w, h), palette)
-// 		images = append(images, img)
-// 		delays = append(delays, 3)
-//
-// 		img.Set(40, 40+i, color.RGBA{uint8(55), uint8(255), uint8(55), 255})
-// 		img.Set(40, 41+i, color.RGBA{uint8(55), uint8(255), uint8(55), 255})
-// 		img.Set(40, 42+i, color.RGBA{uint8(55), uint8(255), uint8(55), 255})
-// 		img.Set(40, 43+i, color.RGBA{uint8(55), uint8(255), uint8(55), 255})
-// 		img.Set(40, 44+i, color.RGBA{uint8(55), uint8(255), uint8(55), 255})
-// 	}
-//
-// 	f, _ := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
-// 	defer f.Close()
-//
-// 	gif.EncodeAll(f, &gif.GIF{
-// 		Image: images,
-// 		Delay: delays,
-// 	})
-func main() {
-	img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+func letter(img *image.RGBA, x, y int, lttr string) {
+	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff}, x*fontSize, (y+1)*fontSize, lttr)
+}
 
-	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff}, 20, 20, "xo")
-	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff}, 20, 44, "xo")
+func canvas(w, h int) *image.RGBA {
+	return image.NewRGBA(image.Rect(0, 0, w*fontSize, h*fontSize))
+}
+
+func init() {
+	monoFont = ttf(gomono.TTF, fontSize)
+}
+
+func main() {
+	str := strings.TrimSpace(`
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x                               x
+x    o               o          x
+x                               x
+x              o                x
+x                               x
+x                               x
+x         o                     x
+x                               x
+x                               x
+x                   o           x
+x                               x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+`)
+
+	rows := strings.Split(str, "\n")
+	cols := strings.Split(rows[0], "")
+
+	img := canvas(len(cols), len(rows))
+
+	for y, row := range strings.Split(str, "\n") {
+		for x, col := range strings.Split(row, "") {
+			letter(img, x, y, col)
+		}
+	}
 
 	handler, _ := os.OpenFile("out.png", os.O_WRONLY|os.O_CREATE, 0600)
 	defer handler.Close()
-
 	png.Encode(handler, img)
 }
