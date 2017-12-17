@@ -73,7 +73,7 @@ func stdio() string {
 		content += "\n" + scanner.Text()
 	}
 
-	return strings.TrimSpace(content)
+	return content
 }
 
 func file(path string) string {
@@ -84,7 +84,7 @@ func file(path string) string {
 		os.Exit(2)
 	}
 
-	return strings.TrimSpace(string(content))
+	return string(content)
 }
 
 func usage() {
@@ -94,6 +94,14 @@ func usage() {
 
 func init() {
 	monoFont = ttf(hackregular.TTF, fontSize)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
 }
 
 func main() {
@@ -112,9 +120,14 @@ func main() {
 	}
 
 	rows := strings.Split(str, "\n")
-	cols := strings.Split(rows[0], "")
+	colsLen := 0
 
-	img := canvas(len(cols), len(rows))
+	// Fix widest row
+	for _, row := range rows {
+		colsLen = max(colsLen, len(strings.Split(row, "")))
+	}
+
+	img := canvas(colsLen, len(rows))
 
 	for y, row := range strings.Split(str, "\n") {
 		for x, col := range strings.Split(row, "") {
