@@ -9,13 +9,15 @@ import (
 	"strings"
 
 	"github.com/golang/freetype/truetype"
+	"github.com/minond/txt/hackregular"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/image/math/fixed"
 )
 
 const (
-	fontSize = 16
+	fontSize   = 64
+	charWidth  = 44
+	charHeight = 60
 )
 
 var (
@@ -54,15 +56,15 @@ func write(img *image.RGBA, col color.RGBA, x, y int, str string) {
 }
 
 func letter(img *image.RGBA, x, y int, lttr string) {
-	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff}, x*fontSize, (y+1)*fontSize, lttr)
+	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff}, x*charWidth, y*charHeight+charHeight, lttr)
 }
 
 func canvas(w, h int) *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, w*fontSize, h*fontSize))
+	return image.NewRGBA(image.Rect(0, 0, w*charWidth-charWidth, h*charHeight))
 }
 
 func init() {
-	monoFont = ttf(gomono.TTF, fontSize)
+	monoFont = ttf(hackregular.TTF, fontSize)
 }
 
 func main() {
