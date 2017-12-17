@@ -1,15 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/minond/txt/hackregular"
+	"github.com/minond/txtimg/hackregular"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -63,26 +65,51 @@ func canvas(w, h int) *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, w*charWidth-charWidth, h*charHeight))
 }
 
+func stdio() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	content := ""
+
+	for scanner.Scan() {
+		content += "\n" + scanner.Text()
+	}
+
+	return strings.TrimSpace(content)
+}
+
+func file(path string) string {
+	content, err := ioutil.ReadFile(path)
+
+	if err != nil {
+		fmt.Printf("Error reading file: %v", err)
+		os.Exit(2)
+	}
+
+	return strings.TrimSpace(string(content))
+}
+
+func usage() {
+	fmt.Println("Usage: go run main.go out.png < in.txt")
+	fmt.Println("       go run main.go in.txt out.png")
+}
+
 func init() {
 	monoFont = ttf(hackregular.TTF, fontSize)
 }
 
 func main() {
-	str := strings.TrimSpace(`
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-x                               x
-x    o               o          x
-x                               x
-x              o                x
-x                               x
-x                               x
-x         o                     x
-x                               x
-x                               x
-x                   o           x
-x                               x
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-`)
+	var str string
+	var out string
+
+	if len(os.Args) > 2 {
+		str = file(os.Args[1])
+		out = os.Args[2]
+	} else if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) == 0 {
+		str = stdio()
+		out = os.Args[1]
+	} else {
+		usage()
+		os.Exit(2)
+	}
 
 	rows := strings.Split(str, "\n")
 	cols := strings.Split(rows[0], "")
@@ -95,7 +122,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 		}
 	}
 
-	handler, _ := os.OpenFile("out.png", os.O_WRONLY|os.O_CREATE, 0600)
+	handler, _ := os.OpenFile(out, os.O_WRONLY|os.O_CREATE, 0600)
 	defer handler.Close()
 	png.Encode(handler, img)
 }
