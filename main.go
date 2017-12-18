@@ -59,15 +59,13 @@ func main() {
 
 	for i, content := range contents {
 		fmt.Printf("Generating %d out of %d frames...", i+1, len(contents))
-		img := canvas(colsLen, rowsLen)
 
-		fill(img, colsLen*charWidth, rowsLen*charHeight,
-			color.RGBA{0xff, 0xff, 0xff, 0xff})
-
-		writeOver(img, content)
+		canvas := NewCanvas(colsLen, rowsLen)
+		canvas.Fill(color.RGBA{0xff, 0xff, 0xff, 0xff})
+		canvas.Letters(content)
 
 		buffer := new(bytes.Buffer)
-		gif.Encode(buffer, img, &gif.Options{NumColors: 256})
+		gif.Encode(buffer, canvas.Img, &gif.Options{NumColors: 256})
 		encoded, _ := gif.Decode(buffer)
 
 		out.Image = append(out.Image, encoded.(*image.Paletted))

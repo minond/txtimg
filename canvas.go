@@ -12,10 +12,18 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+type Canvas struct {
+	Img        *image.RGBA
+	imgHeight  int
+	imgWidth   int
+	charWidth  int
+	charHeight int
+}
+
 const (
-	fontSize   = 64
-	charWidth  = 44
-	charHeight = 60
+	defaultFontSize   = 64
+	defaultCharWidth  = 44
+	defaultCharHeight = 60
 )
 
 var (
@@ -23,7 +31,7 @@ var (
 )
 
 func init() {
-	monoFont = ttf(hackregular.TTF, fontSize)
+	monoFont = ttf(hackregular.TTF, defaultFontSize)
 }
 
 func ttf(data []byte, size int) font.Face {
@@ -41,14 +49,22 @@ func ttf(data []byte, size int) font.Face {
 	})
 }
 
-func write(img *image.RGBA, col color.RGBA, x, y int, str string) {
+func (c *Canvas) Fill(col color.RGBA) {
+	for y := 0; y < c.imgHeight; y++ {
+		for x := 0; x < c.imgWidth; x++ {
+			c.Img.Set(x, y, col)
+		}
+	}
+}
+
+func (c *Canvas) Write(col color.RGBA, x, y int, str string) {
 	point := fixed.Point26_6{
 		fixed.Int26_6(x * 62),
 		fixed.Int26_6(y * 62),
 	}
 
 	d := &font.Drawer{
-		Dst:  img,
+		Dst:  c.Img,
 		Src:  image.NewUniform(col),
 		Dot:  point,
 		Face: monoFont,
@@ -57,31 +73,30 @@ func write(img *image.RGBA, col color.RGBA, x, y int, str string) {
 	d.DrawString(str)
 }
 
-func dot(img *image.RGBA, x, y int, col color.RGBA) {
-	img.Set(x, y, col)
+func (c *Canvas) Letter(x, y int, lttr string) {
+	c.Write(color.RGBA{0x00, 0x00, 0x00, 0xff},
+		x*c.charWidth, y*c.charHeight+c.charHeight, lttr)
 }
 
-func fill(img *image.RGBA, w, h int, col color.RGBA) {
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			dot(img, x, y, col)
-		}
-	}
-}
-
-func writeOver(img *image.RGBA, content string) {
+func (c *Canvas) Letters(content string) {
 	for y, row := range strings.Split(content, "\n") {
 		for x, col := range strings.Split(row, "") {
-			letter(img, x, y, col)
+			c.Letter(x, y, col)
 		}
 	}
 }
 
-func letter(img *image.RGBA, x, y int, lttr string) {
-	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff},
-		x*charWidth, y*charHeight+charHeight, lttr)
-}
+func NewCanvas(w, h int) *Canvas {
+	imgWidth := w*defaultCharWidth - defaultCharWidth
+	imgHeight := h*defaultCharHeight - defaultCharHeight
+	rec := image.Rect(0, 0, imgWidth, imgHeight)
+	img := image.NewRGBA(rec)
 
-func canvas(w, h int) *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, w*charWidth-charWidth, h*charHeight-charHeight))
+	return &Canvas{
+		Img:        img,
+		imgHeight:  imgHeight,
+		imgWidth:   imgWidth,
+		charWidth:  defaultCharWidth,
+		charHeight: defaultCharHeight,
+	}
 }
