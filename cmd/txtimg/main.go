@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"image/gif"
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/minond/txtimg"
 )
@@ -37,26 +35,6 @@ func usage() {
 	fmt.Println("Usage: go run main.go [in.txt]*")
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func getDimensions(frame string) (int, int) {
-	rows := strings.Split(frame, "\n")
-	height := len(rows)
-	width := 0
-
-	for _, row := range rows {
-		width = max(width, len(strings.Split(row, "")))
-	}
-
-	return width, height
-}
-
 func main() {
 	if len(os.Args) < 2 {
 		usage()
@@ -65,7 +43,6 @@ func main() {
 
 	out := &gif.GIF{}
 	frames := files(os.Args[1:]...)
-	width, height := getDimensions(frames[0])
 	handler, err := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
 
 	if err != nil {
@@ -74,23 +51,18 @@ func main() {
 
 	defer handler.Close()
 
-	for i, content := range frames {
-		fmt.Printf("Generating %d out of %d frames...", i+1, len(frames))
+	images, err := txtimg.BuildGifFramesWithTick(frames, func(i int) {
+		fmt.Printf("Generating %d out of %d frames.\n", i+1, len(frames))
+	})
 
-		canvas := txtimg.NewCanvas(width, height)
-		canvas.Fill(color.RGBA{0xff, 0xff, 0xff, 0xff})
-		canvas.Letters(content)
+	if err != nil {
+		log.Fatalf("Error encoding: %v", err)
+	}
 
-		enc, err := canvas.AsPaletted()
+	out.Image = append(out.Image, images...)
 
-		if err != nil {
-			log.Fatalf("Error encoding frame #%d: %v", i, err)
-		}
-
-		out.Image = append(out.Image, enc)
+	for i := 0; i < len(images); i++ {
 		out.Delay = append(out.Delay, 25)
-
-		fmt.Printf(" ok!\n")
 	}
 
 	gif.EncodeAll(handler, out)
