@@ -5,7 +5,7 @@ x                               x
 x              o                x
 x                               x
 x                               x
-x         o                     x
+x         o               a     x
 x                               x
 x                               x
 x                   o           x
