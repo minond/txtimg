@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -72,15 +73,9 @@ func main() {
 			}
 		}
 
-		// out.Image = append(out.Image, img.(*image.Paletted))
-		// sub := img.SubImage(image.Rect(0, 0, colsLen*charWidth-charWidth, rowsLen*charHeight-charHeight))
-		handler, _ := os.OpenFile("tmp.gif", os.O_WRONLY|os.O_CREATE, 0600)
-		gif.Encode(handler, img, &gif.Options{NumColors: 256})
-		handler.Close()
-
-		f, _ := os.Open("tmp.gif")
-		encoded, _ := gif.Decode(f)
-		f.Close()
+		buffer := new(bytes.Buffer)
+		gif.Encode(buffer, img, &gif.Options{NumColors: 256})
+		encoded, _ := gif.Decode(buffer)
 
 		out.Image = append(out.Image, encoded.(*image.Paletted))
 		out.Delay = append(out.Delay, 25)
