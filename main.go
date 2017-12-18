@@ -38,7 +38,6 @@ func main() {
 	if len(os.Args) < 2 {
 		usage()
 		os.Exit(2)
-		// str = file(os.Args[1])
 	}
 
 	out := &gif.GIF{}
@@ -53,7 +52,7 @@ func main() {
 	rowsLen := len(rows)
 	colsLen := 0
 
-	// Fix widest row
+	// Find widest row
 	for _, row := range rows {
 		colsLen = max(colsLen, len(strings.Split(row, "")))
 	}
@@ -62,16 +61,10 @@ func main() {
 		fmt.Printf("Generating %d out of %d frames...", i+1, len(contents))
 		img := canvas(colsLen, rowsLen)
 
-		// Fill background
 		fill(img, colsLen*charWidth, rowsLen*charHeight,
 			color.RGBA{0xff, 0xff, 0xff, 0xff})
 
-		// Draw map
-		for y, row := range strings.Split(content, "\n") {
-			for x, col := range strings.Split(row, "") {
-				letter(img, x, y, col)
-			}
-		}
+		writeOver(img, content)
 
 		buffer := new(bytes.Buffer)
 		gif.Encode(buffer, img, &gif.Options{NumColors: 256})

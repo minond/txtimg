@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/golang/freetype/truetype"
 	"github.com/minond/txtimg/font/hackregular"
@@ -64,6 +65,14 @@ func fill(img *image.RGBA, w, h int, col color.RGBA) {
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			dot(img, x, y, col)
+		}
+	}
+}
+
+func writeOver(img *image.RGBA, content string) {
+	for y, row := range strings.Split(content, "\n") {
+		for x, col := range strings.Split(row, "") {
+			letter(img, x, y, col)
 		}
 	}
 }
