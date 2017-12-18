@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
+	"image/gif"
 	"strings"
 
 	"github.com/golang/freetype/truetype"
@@ -84,6 +86,22 @@ func (c *Canvas) Letters(content string) {
 			c.Letter(x, y, col)
 		}
 	}
+}
+
+func (c *Canvas) asGif() (image.Image, error) {
+	buffer := new(bytes.Buffer)
+	gif.Encode(buffer, c.Img, &gif.Options{NumColors: 256})
+	return gif.Decode(buffer)
+}
+
+func (c *Canvas) asPaletted() (*image.Paletted, error) {
+	enc, err := c.asGif()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return enc.(*image.Paletted), nil
 }
 
 func NewCanvas(w, h int) *Canvas {

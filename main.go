@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"image"
 	"image/color"
 	"image/gif"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -22,6 +21,16 @@ func file(path string) string {
 	return string(content)
 }
 
+func files(paths ...string) []string {
+	var contents []string
+
+	for _, path := range paths {
+		contents = append(contents, file(path))
+	}
+
+	return contents
+}
+
 func usage() {
 	fmt.Println("Usage: go run main.go [in.txt]*")
 }
@@ -34,6 +43,18 @@ func max(a, b int) int {
 	}
 }
 
+func getDimensions(frame string) (int, int) {
+	rows := strings.Split(frame, "\n")
+	height := len(rows)
+	width := 0
+
+	for _, row := range rows {
+		width = max(width, len(strings.Split(row, "")))
+	}
+
+	return width, height
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		usage()
@@ -41,41 +62,35 @@ func main() {
 	}
 
 	out := &gif.GIF{}
-	files := os.Args[1:]
-	var contents []string
+	frames := files(os.Args[1:]...)
+	width, height := getDimensions(frames[0])
+	handler, err := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
 
-	for _, v := range files {
-		contents = append(contents, file(v))
+	if err != nil {
+		log.Fatalf("Error opening output file: %v", err)
 	}
 
-	rows := strings.Split(contents[0], "\n")
-	rowsLen := len(rows)
-	colsLen := 0
+	defer handler.Close()
 
-	// Find widest row
-	for _, row := range rows {
-		colsLen = max(colsLen, len(strings.Split(row, "")))
-	}
+	for i, content := range frames {
+		fmt.Printf("Generating %d out of %d frames...", i+1, len(frames))
 
-	for i, content := range contents {
-		fmt.Printf("Generating %d out of %d frames...", i+1, len(contents))
-
-		canvas := NewCanvas(colsLen, rowsLen)
+		canvas := NewCanvas(width, height)
 		canvas.Fill(color.RGBA{0xff, 0xff, 0xff, 0xff})
 		canvas.Letters(content)
 
-		buffer := new(bytes.Buffer)
-		gif.Encode(buffer, canvas.Img, &gif.Options{NumColors: 256})
-		encoded, _ := gif.Decode(buffer)
+		enc, err := canvas.asPaletted()
 
-		out.Image = append(out.Image, encoded.(*image.Paletted))
+		if err != nil {
+			log.Fatalf("Error encoding frame #%d: %v", i, err)
+		}
+
+		out.Image = append(out.Image, enc)
 		out.Delay = append(out.Delay, 25)
 
 		fmt.Printf(" ok!\n")
 	}
 
-	handler, _ := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
-	defer handler.Close()
-
 	gif.EncodeAll(handler, out)
+	fmt.Println("Saved to out.gif")
 }
