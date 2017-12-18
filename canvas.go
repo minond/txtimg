@@ -1,4 +1,4 @@
-package main
+package txtimg
 
 import (
 	"bytes"
@@ -88,14 +88,14 @@ func (c *Canvas) Letters(content string) {
 	}
 }
 
-func (c *Canvas) asGif() (image.Image, error) {
+func (c *Canvas) AsGif() (image.Image, error) {
 	buffer := new(bytes.Buffer)
 	gif.Encode(buffer, c.Img, &gif.Options{NumColors: 256})
 	return gif.Decode(buffer)
 }
 
-func (c *Canvas) asPaletted() (*image.Paletted, error) {
-	enc, err := c.asGif()
+func (c *Canvas) AsPaletted() (*image.Paletted, error) {
+	enc, err := c.AsGif()
 
 	if err != nil {
 		return nil, err

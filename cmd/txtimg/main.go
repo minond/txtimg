@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/minond/txtimg"
 )
 
 func file(path string) string {
@@ -75,11 +77,11 @@ func main() {
 	for i, content := range frames {
 		fmt.Printf("Generating %d out of %d frames...", i+1, len(frames))
 
-		canvas := NewCanvas(width, height)
+		canvas := txtimg.NewCanvas(width, height)
 		canvas.Fill(color.RGBA{0xff, 0xff, 0xff, 0xff})
 		canvas.Letters(content)
 
-		enc, err := canvas.asPaletted()
+		enc, err := canvas.AsPaletted()
 
 		if err != nil {
 			log.Fatalf("Error encoding frame #%d: %v", i, err)
