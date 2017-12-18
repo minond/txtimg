@@ -56,6 +56,18 @@ func write(img *image.RGBA, col color.RGBA, x, y int, str string) {
 	d.DrawString(str)
 }
 
+func dot(img *image.RGBA, x, y int, col color.RGBA) {
+	img.Set(x, y, col)
+}
+
+func fill(img *image.RGBA, w, h int, col color.RGBA) {
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			dot(img, x, y, col)
+		}
+	}
+}
+
 func letter(img *image.RGBA, x, y int, lttr string) {
 	write(img, color.RGBA{0x00, 0x00, 0x00, 0xff},
 		x*charWidth, y*charHeight+charHeight, lttr)

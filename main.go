@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image/png"
+	"image/color"
+	"image/gif"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -20,7 +21,7 @@ func file(path string) string {
 }
 
 func usage() {
-	fmt.Println("Usage: go run main.go in.txt out.png")
+	fmt.Println("Usage: go run main.go in.txt out.gif")
 }
 
 func max(a, b int) int {
@@ -44,6 +45,7 @@ func main() {
 	}
 
 	rows := strings.Split(str, "\n")
+	rowsLen := len(rows)
 	colsLen := 0
 
 	// Fix widest row
@@ -51,7 +53,11 @@ func main() {
 		colsLen = max(colsLen, len(strings.Split(row, "")))
 	}
 
-	img := canvas(colsLen, len(rows))
+	img := canvas(colsLen, rowsLen)
+
+	// Fill background
+	fill(img, colsLen*charWidth, rowsLen*charHeight,
+		color.RGBA{0xff, 0xff, 0xff, 0xff})
 
 	for y, row := range strings.Split(str, "\n") {
 		for x, col := range strings.Split(row, "") {
@@ -60,6 +66,8 @@ func main() {
 	}
 
 	handler, _ := os.OpenFile(out, os.O_WRONLY|os.O_CREATE, 0600)
+	opt := gif.Options{NumColors: 256}
+
 	defer handler.Close()
-	png.Encode(handler, img)
+	gif.Encode(handler, img, &opt)
 }
