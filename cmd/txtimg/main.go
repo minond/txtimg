@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image/gif"
 	"io/ioutil"
@@ -36,13 +37,29 @@ func usage() {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	var delay int
+	var paths []string
+
+	flags := flag.NewFlagSet("txtimg", flag.ExitOnError)
+	flags.IntVar(&delay, "delay", 25, "Delay between gif frames.")
+
+	usage := flags.Usage
+	flags.Usage = func() {
 		usage()
+		fmt.Println("  <paths>* []string")
+		fmt.Println("        Path to frame files.")
+	}
+
+	flags.Parse(os.Args[1:])
+	paths = flags.Args()
+
+	if len(paths) == 0 {
+		flags.Usage()
 		os.Exit(2)
 	}
 
 	out := &gif.GIF{}
-	frames := files(os.Args[1:]...)
+	frames := files(paths...)
 	handler, err := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
 
 	if err != nil {
@@ -52,7 +69,7 @@ func main() {
 	defer handler.Close()
 
 	images, err := txtimg.BuildGifFramesWithTick(frames, func(i int) {
-		fmt.Printf("Generating %d out of %d frames.\n", i+1, len(frames))
+		fmt.Printf("Encoding %s (%02d/%02d)\n", paths[i], i+1, len(frames))
 	})
 
 	if err != nil {
@@ -62,9 +79,9 @@ func main() {
 	out.Image = append(out.Image, images...)
 
 	for i := 0; i < len(images); i++ {
-		out.Delay = append(out.Delay, 25)
+		out.Delay = append(out.Delay, delay)
 	}
 
 	gif.EncodeAll(handler, out)
-	fmt.Println("Saved to out.gif")
+	fmt.Printf("Saved to out.gif with a delay of %d between frames.\n", delay)
 }
