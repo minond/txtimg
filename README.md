@@ -1,8 +1,12 @@
-Txtimg, convert ascii maps into gifs. Use as a stand-alone command line tool or
-as a server. Generate a Gif with a delay of a tenth of a second between frames:
+Txtimg, given a set of frames, which are plain text files, generate a gif. Run
+`go get github.com/minond/txtimg/cmd/txtimg` to install. Once installed, this
+can be used to generate one-offs with the command line (`txtimg -delay <int>
+<frameFiles>`) or you can start a server that handles requests made to `POST /`
+and generates the image using the `frames` passed (as files). Sample usage:
 
 ```bash
-go run cmd/txtimg/main.go  -delay 10 data/simple*.txt
+# Creates out.gif using data/simples-0{1,9}.txt
+> txtimg -delay 10 data/simple*.txt
  11% - Encoding data/simple-01.txt
  22% - Encoding data/simple-02.txt
  33% - Encoding data/simple-03.txt
@@ -15,14 +19,16 @@ go run cmd/txtimg/main.go  -delay 10 data/simple*.txt
 Done - Saved to out.gif with a delay of 10 between frames
 ```
 
-Or, sping up a server that accepts POST requests with files (`frames`
-parameter):
+```bash
+# Sets up a server on localhost:8080
+> txtimg -listen localhost:8080
+Setting up server on localhost:8080
+```
 
 ```bash
-go run cmd/txtimg/main.go -listen localhost:8080
-Setting up server on localhost:8080
-
-curl -X POST http://localhost:8080 \
+# Make a POST request to http://localhost:8080 with the same files we passed in
+# the first command line example.
+> curl -X POST http://localhost:8080 \
   -F frames=@data/simple-01.txt \
   -F frames=@data/simple-02.txt \
   -F frames=@data/simple-03.txt \
