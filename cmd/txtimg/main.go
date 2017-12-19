@@ -69,7 +69,7 @@ func main() {
 	defer handler.Close()
 
 	images, err := txtimg.BuildGifFramesWithTick(frames, func(i int) {
-		fmt.Printf("Encoding %s (%02d/%02d)\n", paths[i], i+1, len(frames))
+		fmt.Printf("%3.0f%% - Encoding %s\n", float64(i+1)/float64(len(frames))*100, paths[i])
 	})
 
 	if err != nil {
@@ -83,5 +83,5 @@ func main() {
 	}
 
 	gif.EncodeAll(handler, out)
-	fmt.Printf("Saved to out.gif with a delay of %d between frames.\n", delay)
+	fmt.Printf("Done - Saved to out.gif with a delay of %d between frames\n", delay)
 }
